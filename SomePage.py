@@ -26,16 +26,25 @@ class SomePage():
 
     def retrieve(self, sleepSec=0):
         ''' Performs the HTTP query and retrieves the contents '''
-        time.sleep(sleepSec)
-        print >> sys.stderr, "Downloading %s after sleeping for %d sec ..." % (self.url, sleepSec),
-        response = urllib2.urlopen(self.url)
-        self.contents = response.read()
-        print >> sys.stderr, "done"
+        try:
+            time.sleep(sleepSec)
+            print >> sys.stderr, "Downloading %s after sleeping for %d sec ..." % (self.url, sleepSec),
+            response = urllib2.urlopen(self.url)
+            self.contents = response.read()
+            print >> sys.stderr, "done"
+        except:
+            self.contents = ''
+            print >> sys.stderr, "ERROR"
+            raise('Failed HTTP attempt')
 
     def getContents(self):
         ''' Returns the contents '''
         if self.contents is None:
-            self.retrieve(sleepSec=random.randint(1,5))
+            try:
+                self.retrieve(sleepSec=random.randint(1,5))
+            except:
+                print >> sys.stderr, "Unable to get the contents for %s; continuing anyway" % self.url
+                pass
         return self.contents
 
     def saveContentsAsFile(self, dirname=None, filename=None, onlyIfNotExists=False):
@@ -56,7 +65,11 @@ class SomePage():
             return
 
         if self.contents is None:
-            self.retrieve(sleepSec=random.randint(1,5))
+            try:
+                self.retrieve(sleepSec=random.randint(1,5))
+            except:
+                print >> sys.stderr, "Unable to save the contents for %s; continuing anyway" % self.url
+                pass
 
         with open(fullpathtofile, 'w') as f:
             f.write(self.contents)
