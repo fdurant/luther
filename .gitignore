@@ -3,3 +3,4 @@ _site
 *~
 *.pyc
 .ipynb_checkpoints
+mydata

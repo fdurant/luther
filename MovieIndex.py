@@ -44,6 +44,12 @@ class MovieIndex():
     def getSoup(self):
         return self.soup
  
+    def getLetter(self):
+        return self.letter
+
+    def getPage(self):
+        return self.page
+
     def getSameLetterPageList(self):
         ''' returns the list of all *other* partial Movie Indices referenced by this Movie Index, 
         i.e. those that with the same starting letter.
@@ -53,7 +59,7 @@ class MovieIndex():
         otherIndexUrls = self.soup.find(class_='alpha-nav-holder').find_all('a',{'href':True})
         pattern = re.compile('page=(\d+)')
         otherPageNumbers = [pattern.search(str(otherIndexUrl)).group(1) for otherIndexUrl in otherIndexUrls]
-        return [MovieIndex(self.letter, otherP) for otherP in otherPageNumbers if otherP is not None]
+        return [MovieIndex(self.letter, page=otherP) for otherP in otherPageNumbers if otherP is not None]
 
     def getMoviePageList(self):
         ''' returns the list of all movie pages referenced in this index '''
