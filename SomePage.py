@@ -11,7 +11,7 @@ class SomePage():
 
     def __init__(self, id):
         self.id = id
-        self.url = __class__.__makePageUrl__(self)        
+        self.url = __class__.__makePageUrl__(self)
         self.contents = None
 
     def __makePageUrl__(self):
@@ -47,8 +47,8 @@ class SomePage():
                 pass
         return self.contents
 
-    def saveContentsAsFile(self, dirname=None, filename=None, onlyIfNotExists=False):
-        ''' Saves the contents in a filename '''
+    def __makeFullPathName__(self, dirname=None, filename=None):
+        ''' Produces and returns a full path to a filename '''
         if filename is None:
             filename = '%s.html' % self.id
 
@@ -56,6 +56,12 @@ class SomePage():
             dirname = '.'
 
         fullpathtofile = "%s/%s" % (dirname, filename)
+        return fullpathtofile
+
+    def saveContentsAsFile(self, dirname=None, filename=None, onlyIfNotExists=False):
+        ''' Saves the contents in a filename '''
+
+        fullpathtofile = self.__makeFullPathName__(dirname, filename)
 
         if not os.path.exists(dirname):
             os.makedirs(dirname)
@@ -75,7 +81,24 @@ class SomePage():
             f.write(self.contents)
         f.close()
 
+    def loadContentsFromFile(self, dirname=None, filename=None):
+        ''' Load the contents from a file, directly into self.contents '''
+
+        fullpathtofile = self.__makeFullPathName__(dirname, filename)
+
+        try:
+            if self.contents is None:
+                print >> sys.stderr, "Reload contents from file %s ..." % fullpathtofile,
+            else:
+                print >> sys.stderr, "Loading contents from file %s ..." % fullpathtofile,                
+            with open(fullpathtofile, 'r') as f:
+                self.contents = f.read()
+            print >> sys.stderr, "done"
+            
+        except:
+            print >> sys.stderr, "Could not load contents from file %s" % fullpathtofile
+
     def getCsvRow(self):
-        ''' Saves the contents in a filename '''
-        pass
+        ''' Returns a row of comma separated data '''
+        raise("getCvsRow is an abstract method: please implement it")
 
