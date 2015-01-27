@@ -99,11 +99,25 @@ class MoviePage(SomePage):
     def __getProductionBudget__(self):
         result=''
         try:
-            pattern = re.compile("Production Budget:\s+<b>\$?([\d,N\/A]+?)<\/b>")
-            result = pattern.search(str(self.soup)).group(1)
+            pattern = re.compile("Production Budget:\s+<b>\$?([^<]+?)<\/b>")
+            tmp = pattern.search(str(self.soup)).group(1)
+            try:
+                pattern2 = re.compile("([\d,]+)\s+(million)")
+                match2 = pattern2.search(tmp)
+                n = match2.group(1)
+                u = match2.group(2)
+                if u == 'million':
+                    result = str(int(n.replace(',','')) * 1000000)
+                else:
+                    result = ''
+            except AttributeError:
+                pattern3 = re.compile("^([\d,N\/A]+)$")
+                match3 = pattern3.search(tmp)
+                amount = match3.group(1)
+                result = amount.replace(',','')
         except AttributeError:
-            pass
-        return result.replace(',','')
+            result = ''
+        return result
 
     def __getRuntimeInMinutes__(self):
         result=''
@@ -157,6 +171,26 @@ class MoviePage(SomePage):
             pass
         return result.replace(',','')
 
+    def __getOpeningWeekendGross__(self):
+        result=''
+        try:
+            pattern = re.compile("Opening.{1,6}Weekend:[\s\S]+?\$([\d,]+)<\/td><\/tr>", re.MULTILINE)
+            result = pattern.search(str(self.soup)).group(1)
+        except AttributeError:
+            result=''
+        return result.replace(',','')
+
+    def __getOpeningWeekendDetails__(self):
+        result=''
+        try:
+            pattern = re.compile("([\d,]+?)\s+rank,\s+([\d,]+?)\s+theaters,\s+\$([\d,]+?)\s+average\)</font></td></tr>", re.MULTILINE)
+            rank = pattern.search(str(self.soup)).group(1).replace(',','')
+            nrTheaters = pattern.search(str(self.soup)).group(2).replace(',','')
+            avgGrossPerTheater = pattern.search(str(self.soup)).group(3).replace(',','')
+        except AttributeError:
+            return ('','','')
+        return (rank, nrTheaters, avgGrossPerTheater)
+
     def getCsvHeader(self):
         result = []
         result.append('Title')
@@ -172,6 +206,10 @@ class MoviePage(SomePage):
         result.append('ReleaseDate')
         result.append('MPAARating')
         result.append('ForeignTotalGross')
+        result.append('OpeningWeekendGross')
+        result.append('OWRank')
+        result.append('OWNumberTheaters')
+        result.append('OWAvgGrossPerTheater')
         return result
 
     def getCsvRow(self):
@@ -191,6 +229,11 @@ class MoviePage(SomePage):
         result.append(self.__getReleaseDate__())
         result.append(self.__getMPAARating__())
         result.append(self.__getForeignTotalGross__())
+        result.append(self.__getOpeningWeekendGross__())
+        (OWRank, OWNumberOfTheaters, OWAvgPerTheaters) = self.__getOpeningWeekendDetails__()
+        result.append(OWRank)
+        result.append(OWNumberOfTheaters)
+        result.append(OWAvgPerTheaters)
         return result
 
 if __name__ == "__main__":
@@ -231,6 +274,10 @@ if __name__ == "__main__":
     myAssert(csvRow[10],'1980-06-20 00:00:00',csvHeader[10])
     myAssert(csvRow[11],'R',csvHeader[11])
     myAssert(csvRow[12],'58000000',csvHeader[12])
+    myAssert(csvRow[13],'4858152',csvHeader[13])
+    myAssert(csvRow[14],'2',csvHeader[14])
+    myAssert(csvRow[15],'594',csvHeader[15])
+    myAssert(csvRow[16],'8178',csvHeader[16])
 #    print >> sys.stderr, "cvsRow is ", csvRow
 
     # Specific things that went wrong the first time => "unit tests"
@@ -245,3 +292,18 @@ if __name__ == "__main__":
     csvRow = mp4.getCsvRow()
     csvHeader = mp4.getCsvHeader()
     myAssert(csvRow[7],'6388',csvHeader[7])
+
+    mp5 = MoviePage('2046')
+    mp5.loadContentsFromFile(dirname="mydata/movies")
+    csvRow = mp5.getCsvRow()
+    csvHeader = mp5.getCsvHeader()
+    myAssert(csvRow[8],'12000000',csvHeader[8])
+
+    mp6 = MoviePage('1000ae')
+    mp6.loadContentsFromFile(dirname="mydata/movies")
+    csvRow = mp6.getCsvRow()
+    csvHeader = mp6.getCsvHeader()
+
+    myAssert(csvRow[14],'3',csvHeader[14])
+    myAssert(csvRow[15],'3401',csvHeader[15])
+    myAssert(csvRow[16],'8092',csvHeader[16])
