@@ -90,7 +90,7 @@ class MoviePage(SomePage):
     def __getDomesticTotalGross__(self):
         result=''
         try:
-            pattern = re.compile("Domestic Total Gross:\s+<b>\$([\d,]+?)<\/b>")
+            pattern = re.compile("Domestic Total.*?<b>\$([\d,]+?)<\/b>")
             result = pattern.search(str(self.soup)).group(1)
         except AttributeError:
             pass
@@ -239,4 +239,9 @@ if __name__ == "__main__":
     csvRow = mp3.getCsvRow()
     csvHeader = mp3.getCsvHeader()
     myAssert(csvRow[0],'101 Dalmatians (Re-issue) (1969)',csvHeader[0])
-    
+
+    mp4 = MoviePage('100bloodyacres')
+    mp4.loadContentsFromFile(dirname="mydata/movies")
+    csvRow = mp4.getCsvRow()
+    csvHeader = mp4.getCsvHeader()
+    myAssert(csvRow[7],'6388',csvHeader[7])
