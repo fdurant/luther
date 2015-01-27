@@ -81,22 +81,24 @@ class SomePage():
             f.write(self.contents)
         f.close()
 
-    def loadContentsFromFile(self, dirname=None, filename=None):
+    def loadContentsFromFile(self, dirname=None, filename=None, verbose=False):
         ''' Load the contents from a file, directly into self.contents '''
 
         fullpathtofile = self.__makeFullPathName__(dirname, filename)
 
         try:
-            if self.contents is None:
-                print >> sys.stderr, "Reload contents from file %s ..." % fullpathtofile,
-            else:
-                print >> sys.stderr, "Loading contents from file %s ..." % fullpathtofile,                
+            if verbose:
+                if self.contents is None:
+                    print >> sys.stderr, "Loading contents from file %s ..." % fullpathtofile,
+                else:
+                    print >> sys.stderr, "Reloading contents from file %s ..." % fullpathtofile,                
             with open(fullpathtofile, 'r') as f:
                 self.contents = f.read()
-            print >> sys.stderr, "done"
+            if verbose:
+                print >> sys.stderr, "done"
             
         except:
-            print >> sys.stderr, "Could not load contents from file %s" % fullpathtofile
+            print >> sys.stderr, "Could not (re)load contents from file %s" % fullpathtofile
 
     def getCsvRow(self):
         ''' Returns a row of comma separated data '''

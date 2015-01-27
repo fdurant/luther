@@ -31,10 +31,14 @@ class MoviePage(SomePage):
         return self.soup
  
     def __getMovieTitle__(self):
+        result = ''
         try:
             result = self.soup.find('font', {'face':'Verdana', 'size':'6'}).find('b').text
         except:
-            result = ''
+            try:
+                result = self.soup.find('font', {'face':'Verdana', 'size':'5'}).find('b').text
+            except:
+                result = ''
         return result
 
     def __getGenre__(self):
@@ -228,3 +232,11 @@ if __name__ == "__main__":
     myAssert(csvRow[11],'R',csvHeader[11])
     myAssert(csvRow[12],'58000000',csvHeader[12])
 #    print >> sys.stderr, "cvsRow is ", csvRow
+
+    # Specific things that went wrong the first time => "unit tests"
+    mp3 = MoviePage('101dalmatians69')
+    mp3.loadContentsFromFile(dirname="mydata/movies")
+    csvRow = mp3.getCsvRow()
+    csvHeader = mp3.getCsvHeader()
+    myAssert(csvRow[0],'101 Dalmatians (Re-issue) (1969)',csvHeader[0])
+    
