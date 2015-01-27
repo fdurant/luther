@@ -128,9 +128,47 @@ class MoviePage(SomePage):
         try:
             pattern = re.compile("Release Date:\s+<b><nobr>(.+?)</nobr><\/b>")
             result = pattern.search(str(self.soup)).group(1)
+            result = str(dateutil.parser.parse(result))
+        except AttributeError:
+            result = ''
+        except ValueError:
+            result = ''
+        return result
+
+    def __getMPAARating__(self):
+        result=''
+        try:
+            pattern = re.compile("MPAA Rating:\s+<b>(.+?)<\/b>")
+            result = pattern.search(str(self.soup)).group(1)
         except AttributeError:
             pass
-        return str(dateutil.parser.parse(result))
+        return result
+
+    def __getForeignTotalGross__(self):
+        result=''
+        try:
+            pattern = re.compile("Foreign:[\s\S]+?\$([\d,]+)", re.MULTILINE)
+            result = pattern.search(str(self.soup)).group(1)
+        except AttributeError:
+            pass
+        return result.replace(',','')
+
+    def getCsvHeader(self):
+        result = []
+        result.append('Title')
+        result.append('Genre')
+        result.append('Actors')
+        result.append('Directors')
+        result.append('Writers')
+        result.append('Producers')
+        result.append('Composers')
+        result.append('DomesticTotalGross')
+        result.append('ProductionBudget')
+        result.append('RuntimeInMinutes')
+        result.append('ReleaseDate')
+        result.append('MPAARating')
+        result.append('ForeignTotalGross')
+        return result
 
     def getCsvRow(self):
         ''' Returns a row of comma separated data '''
@@ -147,6 +185,8 @@ class MoviePage(SomePage):
         result.append(self.__getProductionBudget__())
         result.append(self.__getRuntimeInMinutes__())
         result.append(self.__getReleaseDate__())
+        result.append(self.__getMPAARating__())
+        result.append(self.__getForeignTotalGross__())
         return result
 
 if __name__ == "__main__":
@@ -173,15 +213,18 @@ if __name__ == "__main__":
 
     # Beautiful soup
     csvRow = mp2.getCsvRow()
-    myAssert(csvRow[0],'The Blues Brothers','Title')
-    myAssert(csvRow[1],'comedy','Genre')
-    myAssert(csvRow[2],'John Belushi|Dan Aykroyd|Carrie Fisher','Actors')
-    myAssert(csvRow[3],'John Landis','Directors')
-    myAssert(csvRow[4],'John Landis','Writers')
-    myAssert(csvRow[5],'Robert K. Weiss','Producers')
-    myAssert(csvRow[6],'Elmer Bernstein','Composers')
-    myAssert(csvRow[7],'57229890','DomesticTotalGross')
-    myAssert(csvRow[8],'N/A','ProductionBudget')
-    myAssert(csvRow[9],'150','RuntimeInMinutes')
-    myAssert(csvRow[10],'1980-06-20 00:00:00','Release Date')
+    csvHeader = mp2.getCsvHeader()
+    myAssert(csvRow[0],'The Blues Brothers',csvHeader[0])
+    myAssert(csvRow[1],'comedy',csvHeader[1])
+    myAssert(csvRow[2],'John Belushi|Dan Aykroyd|Carrie Fisher',csvHeader[2])
+    myAssert(csvRow[3],'John Landis',csvHeader[3])
+    myAssert(csvRow[4],'John Landis',csvHeader[4])
+    myAssert(csvRow[5],'Robert K. Weiss',csvHeader[5])
+    myAssert(csvRow[6],'Elmer Bernstein',csvHeader[6])
+    myAssert(csvRow[7],'57229890',csvHeader[7])
+    myAssert(csvRow[8],'N/A',csvHeader[8])
+    myAssert(csvRow[9],'150',csvHeader[9])
+    myAssert(csvRow[10],'1980-06-20 00:00:00',csvHeader[10])
+    myAssert(csvRow[11],'R',csvHeader[11])
+    myAssert(csvRow[12],'58000000',csvHeader[12])
 #    print >> sys.stderr, "cvsRow is ", csvRow
