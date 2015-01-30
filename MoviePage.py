@@ -2,10 +2,11 @@ from SomePage import SomePage
 import urllib2
 import os.path
 from bs4 import BeautifulSoup
-from myutils import myAssert, removeTags, reduceWhiteSpace
+from myutils import myAssert, removeTags, reduceWhiteSpace, getMovieSeasonFromDate
 import re
 import sys
 import dateutil.parser
+from datetime import date
 
 class MoviePage(SomePage):
     ''' Represents a movie page from Box Office Mojo
@@ -142,16 +143,19 @@ class MoviePage(SomePage):
         return result
 
     def __getReleaseDate__(self):
-        result=''
+        releaseDate=''
+        releaseSeason=''
+        result = (releaseDate,releaseSeason)
         try:
             pattern = re.compile("Release Date:\s+<b><nobr>(.+?)</nobr><\/b>")
-            result = pattern.search(str(self.soup)).group(1)
-            result = str(dateutil.parser.parse(result))
+            tmp = pattern.search(str(self.soup)).group(1)
+            releaseDate = dateutil.parser.parse(removeTags(tmp))
+            releaseSeason = getMovieSeasonFromDate(date(releaseDate.year,releaseDate.month,releaseDate.day))
         except AttributeError:
-            result = ''
+            result = ('','')
         except ValueError:
-            result = ''
-        return result
+            result = ('','')
+        return (str(releaseDate), releaseSeason)
 
     def __getMPAARating__(self):
         result=''
@@ -210,6 +214,7 @@ class MoviePage(SomePage):
         result.append('OWRank')
         result.append('OWNumberTheaters')
         result.append('OWAvgGrossPerTheater')
+        result.append('ReleaseSeason')
         return result
 
     def getCsvRow(self):
@@ -226,7 +231,8 @@ class MoviePage(SomePage):
         result.append(self.__getDomesticTotalGross__())
         result.append(self.__getProductionBudget__())
         result.append(self.__getRuntimeInMinutes__())
-        result.append(self.__getReleaseDate__())
+        (releaseDate, releaseSeason) = self.__getReleaseDate__()
+        result.append(releaseDate)
         result.append(self.__getMPAARating__())
         result.append(self.__getForeignTotalGross__())
         result.append(self.__getOpeningWeekendGross__())
@@ -234,6 +240,7 @@ class MoviePage(SomePage):
         result.append(OWRank)
         result.append(OWNumberOfTheaters)
         result.append(OWAvgPerTheaters)
+        result.append(releaseSeason)
         return result
 
 if __name__ == "__main__":
@@ -278,6 +285,7 @@ if __name__ == "__main__":
     myAssert(csvRow[14],'2',csvHeader[14])
     myAssert(csvRow[15],'594',csvHeader[15])
     myAssert(csvRow[16],'8178',csvHeader[16])
+    myAssert(csvRow[17],'summer',csvHeader[17])
 #    print >> sys.stderr, "cvsRow is ", csvRow
 
     # Specific things that went wrong the first time => "unit tests"
@@ -299,11 +307,16 @@ if __name__ == "__main__":
     csvHeader = mp5.getCsvHeader()
     myAssert(csvRow[8],'12000000',csvHeader[8])
 
-    mp6 = MoviePage('1000ae')
+    mp6 = MoviePage('1000ae') 
     mp6.loadContentsFromFile(dirname="mydata/movies")
     csvRow = mp6.getCsvRow()
     csvHeader = mp6.getCsvHeader()
-
     myAssert(csvRow[14],'3',csvHeader[14])
     myAssert(csvRow[15],'3401',csvHeader[15])
     myAssert(csvRow[16],'8092',csvHeader[16])
+
+    mp7 = MoviePage('10years')
+    mp7.loadContentsFromFile(dirname="mydata/movies")
+    csvRow = mp7.getCsvRow()
+    csvHeader = mp7.getCsvHeader()
+    myAssert(csvRow[10],'2012-09-14 00:00:00',csvHeader[10])
